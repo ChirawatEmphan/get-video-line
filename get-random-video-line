@@ -1,0 +1,80 @@
+// YouTube video links
+var youtube_videos = [
+  'https://www.youtube.com/watch?v=2cNC-E1D868',
+  'https://www.youtube.com/watch?v=63d0SIU91Uo',
+  'https://www.youtube.com/watch?v=pPa1d5cC8M4',
+];
+
+// Function to get a random YouTube video
+function getRandomYouTubeVideo() {
+  var index = Math.floor(Math.random() * youtube_videos.length);
+  return youtube_videos[index];
+}
+
+// Function to send ImageMap message with YouTube video link
+function replyImageMapVideoMessage(replyToken, video_url) {
+  var access_token = '#######'; // Line Bot API Token
+  
+  var data = {
+    'replyToken': replyToken,
+    'messages': [
+      {
+        'type': 'imagemap',
+        'altText': 'This is an imagemap video',
+        'baseUrl': 'https://via.placeholder.com/1040', // Placeholder image URL
+        'baseSize': {
+          'height': 1040,
+          'width': 1040
+        },
+        'actions': [
+          {
+            'type': 'uri',
+            'linkUri': video_url,
+            'area': {
+              'x': 0,
+              'y': 0,
+              'width': 1040,
+              'height': 1040
+            }
+          }
+        ]
+      }
+    ]
+  };
+
+  var options = {
+    'method': 'post',
+    'contentType': 'application/json',
+    'headers': {
+      'Authorization': 'Bearer ' + access_token
+    },
+    'payload': JSON.stringify(data)
+  };
+
+  var url = 'https://api.line.me/v2/bot/message/reply';
+  UrlFetchApp.fetch(url, options);
+}
+
+// Main code to handle incoming messages
+function doPost(e) {
+  var events = JSON.parse(e.postData.contents).events;
+  
+  if (events && events.length > 0) {
+    events.forEach(function(event) {
+      if (event.type === 'message' && event.message.type === 'text') {
+        var text = event.message.text;
+        var replyToken = event.replyToken;
+
+        // Check if the message is "วิดิโอ"
+        if (text === 'วิดิโอ') {
+          // Get a random YouTube video link
+          var video_url = getRandomYouTubeVideo();
+          
+          // Send ImageMap video
+          replyImageMapVideoMessage(replyToken, video_url);
+        }
+      }
+    });
+  }
+}
+
