@@ -1,0 +1,105 @@
+<?php
+// Line Bot API Token
+$access_token = '###################################';
+
+// YouTube video links
+$youtube_videos = [
+  'Path Video',
+ 'Path Video',
+ 'Path Video',
+ 'Path Video',
+ 'Path Video',
+ 'Path Video',
+
+];
+
+// Function to get a random YouTube video
+function getRandomYouTubeVideo() {
+    global $youtube_videos;
+    return $youtube_videos[array_rand($youtube_videos)];
+}
+
+// Function to send ImageMap message with YouTube video link
+function replyImageMapVideoMessage($replyToken, $video_url) {
+    global $access_token;
+
+    $data = [
+        'replyToken' => $replyToken,
+        'messages' => [
+            [
+                'type' => 'imagemap',
+                'altText' => 'This is an imagemap video',
+                'baseUrl' => 'https://via.placeholder.com/1040', // ใช้รูป placeholder หรือ URL ของรูปภาพใดๆ
+                'baseSize' => [
+                    'height' => 1040,
+                    'width' => 1040
+                ],
+                'actions' => [
+                    [
+                        'type' => 'uri',
+                        'linkUri' => $video_url,
+                        'area' => [
+                            'x' => 0,
+                            'y' => 0,
+                            'width' => 1040,
+                            'height' => 1040
+                        ]
+                    ]
+                ]
+            ]
+        ]
+    ];
+
+    $headers = [
+        'Content-Type: application/json',
+        'Authorization: Bearer ' . $access_token
+    ];
+
+    $url = 'https://api.line.me/v2/bot/message/reply';
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+    curl_exec($ch);
+    curl_close($ch);
+}
+
+// Main code to handle incoming messages
+$content = file_get_contents('php://input');
+$events = json_decode($content, true);
+
+if (!empty($events['events'])) {
+    foreach ($events['events'] as $event) {
+        if ($event['type'] == 'message' && $event['message']['type'] == 'text') {
+            $text = $event['message']['text'];
+            $replyToken = $event['replyToken'];
+
+            // Check if the message is "วิดิโอ"
+            if ($text == "วิดิโอ") {
+                // Get a random YouTube video link
+                $video_url = getRandomYouTubeVideo();
+
+                // Send ImageMap video
+                replyImageMapVideoMessage($replyToken, $video_url);
+            }
+        }
+    }
+}
+
+// Function to reply with a text message
+function replyMessage($replyToken, $message) {
+    global $access_token;
+    $url = 'https://api.line.me/v2/bot/message/reply';
+    $data = ['replyToken' => $replyToken, 'messages' => [$message]];
+    $headers = ['Content-Type: application/json', 'Authorization: Bearer ' . $access_token];
+
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+    curl_exec($ch);
+    curl_close($ch);
+}
+?>
